@@ -12,7 +12,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-} from "react-native";
+} from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";

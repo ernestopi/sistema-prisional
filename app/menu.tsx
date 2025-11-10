@@ -5,7 +5,7 @@ import {
   TouchableOpacity, 
   SafeAreaView, 
   Alert 
-} from "react-native";
+} from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";

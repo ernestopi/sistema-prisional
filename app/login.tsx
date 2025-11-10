@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, SafeAreaView,
+  View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, Alert
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import styles from "./styles";

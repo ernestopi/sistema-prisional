@@ -4,20 +4,46 @@ const styles = StyleSheet.create({
   /* ========= GERAIS ========= */
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#f8fafc",
   },
   content: {
-    padding: 15,
+    padding: 20,
   },
 
-  /* ========= CABEÃ‡ALHO (usado em vÃ¡rias telas) ========= */
+  /* ========= CABEÇALHO FINO E MINIMALISTA ========= */
   header: { 
-    backgroundColor: '#1e3a8a', 
-    padding: 25, 
+    backgroundColor: "#1e40af",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    alignItems: 'center' 
+    alignItems: 'center',
+    height: 80,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4043f3ff',
   },
+  
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  
+  headerCenter: {
+    flex: 3,
+    alignItems: 'center',
+  },
+  
+  headerRight: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  
   title: {
     fontSize: 22,
     fontWeight: "bold",
@@ -25,46 +51,73 @@ const styles = StyleSheet.create({
   },
   headerTitle: { 
     color: '#fff', 
-    fontSize: 25, 
-    fontWeight: 'bold', 
-    marginTop: 20 
+    fontSize: 20, 
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    flexWrap: 'nowrap', // Adicionei
+    numberOfLines: 1, // Adicionei
+  },
+  headerSub: { 
+    color: '#999', 
+    fontSize: 11,
+    fontWeight: '400',
+    marginTop: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    marginVertical: 10,
-    marginLeft: 12,
-    color: "#1e3a8a",
+    marginVertical: 15,
+    marginLeft: 5,
+    color: "#1e40af",
   },
 
-  /* ========= BOTÃ•ES DO CABEÃ‡ALHO ========= */
+  /* ========= BOTÕES DO CABEÇALHO MINIMALISTAS ========= */
   logoutBtn: { 
-    backgroundColor: '#ef4444', 
-    paddingHorizontal: 20, 
-    paddingVertical: 10, 
-    marginTop: 25, 
-    borderRadius: 10 
+    backgroundColor: '#ef4444', // Adicionei fundo vermelho
+    paddingHorizontal: 16, // Aumentei de 8 para 16
+    paddingVertical: 8, // Aumentei de 6 para 8
+    borderRadius: 8, // Aumentei de 6 para 8
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-    logoutBtnList: { 
-    backgroundColor: '#797575ff', 
-    paddingHorizontal: 20, 
-    paddingVertical: 10, 
-    marginTop: 25, 
-    borderRadius: 10 
+  logoutBtnList: { 
+    backgroundColor: 'transparent',
+    paddingHorizontal: 8, 
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   logoutText: { 
-    color: '#fff', 
-    fontWeight: 'bold' 
+    color: '#fff', // Mudei de '#999' para branco
+    fontWeight: '600', // Aumentei de '500' para '600'
+    fontSize: 14,
   },
   backText: { 
-    color: '#fff', 
-    fontWeight: 'bold' 
+    color: '#fff', // Mudei de '#999' para branco
+    fontWeight: '600', // Aumentei de '500' para '600'
+    fontSize: 14,
   },
+  circleBackButton: {
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  backgroundColor: '#334155', // azul escuro/cinza escuro
+  justifyContent: 'center',
+  alignItems: 'center',
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 5,
+},
+
 
   /* ========= LOGIN ========= */
   loginContainer: {
     flex: 1,
-    backgroundColor: "#1e3a8a",
+    backgroundColor: "#1e40af",
     justifyContent: "center",
   },
   loginKeyboard: {
@@ -75,39 +128,47 @@ const styles = StyleSheet.create({
   loginBox: {
     width: "85%",
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    padding: 28,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   loginTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#1e40af",
     textAlign: "center",
     marginBottom: 8,
   },
   loginSubtitle: {
     textAlign: "center",
-    color: "#475569",
-    marginBottom: 20,
+    color: "#64748b",
+    marginBottom: 24,
+    fontSize: 15,
   },
   loginInput: {
-    borderWidth: 1,
-    borderColor: "#94a3b8",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    fontSize: 15,
+    backgroundColor: "#f8fafc",
   },
   loginButton: {
-    backgroundColor: "#1e3a8a",
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: "#1e40af",
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 8,
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   loginButtonText: {
     color: "#fff",
@@ -122,48 +183,62 @@ const styles = StyleSheet.create({
     color: "#334155",
   },
   loginInfoText: {
-    color: "#475569",
+    color: "#64748b",
   },
 
   /* ========= MENU PRINCIPAL ========= */
   menuContainer: { 
     flex: 1, 
-    backgroundColor: '#f3f4f6' 
+    backgroundColor: '#f8fafc' 
   },
   menuContent: { 
     flex: 1, 
     padding: 20 
   },
   menuCard: { 
-    backgroundColor: '#e0e0e07a', 
-    borderRadius: 10, 
-    padding: 20, 
-    marginBottom: 10, 
-    alignItems: 'center' 
+    backgroundColor: '#fff', 
+    borderRadius: 16, 
+    padding: 24, 
+    marginBottom: 16, 
+    alignItems: 'center',
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   menuIcon: { 
-    fontSize: 30, 
-    marginBottom: 10 
+    fontSize: 36, 
+    marginBottom: 12 
   },
   menuCardTitle: { 
     fontSize: 20, 
     fontWeight: 'bold', 
-    color: '#1f2937' 
+    color: '#1e293b',
+    marginBottom: 8,
   },
   menuCardDescription: {
-    color: "#475569",
+    color: "#64748b",
     textAlign: "center",
-    marginTop: 5,
+    marginTop: 4,
+    fontSize: 14,
   },
   totalBox: { 
-    backgroundColor: '#2563eb', 
-    borderRadius: 10, 
-    marginTop: 5, 
+    backgroundColor: '#1e40af', 
+    borderRadius: 16, 
+    marginTop: 10, 
     alignItems: 'center',
-    padding: 10
+    padding: 20,
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   totalText: { 
-    color: '#ece7e7ff', 
+    color: '#fff', 
     fontSize: 32, 
     fontWeight: 'bold' 
   },
@@ -173,7 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#1e3a8a",
+    backgroundColor: "#1e40af",
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
@@ -184,7 +259,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   menuHeaderSubtitle: {
-    color: "#cbd5e1",
+    color: "#bfdbfe",
   },
   logoutButton: {
     backgroundColor: "#ef4444",
@@ -200,27 +275,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 20,
-    color: "#1e3a8a",
+    color: "#1e40af",
   },
 
-  /* ========= CONFERÃŠNCIA ========= */
+  /* ========= CONFERÊNCIA - MODERNIZADO ========= */
   cellCard: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 12,
-    marginBottom: 10,
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 5,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cellHeader: {
     fontWeight: "bold",
-    color: "#1e3a8a",
-    marginBottom: 6,
+    color: "#1e40af",
+    marginBottom: 8,
+    fontSize: 15,
   },
   cellTitle: {
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#1e40af",
     fontSize: 16,
     marginTop: 10,
     marginLeft: 12,
@@ -229,7 +310,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: "#f1f5f9",
   },
@@ -242,19 +323,25 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   editButton: {
-    color: "#2563eb",
+    color: "#3b82f6",
     fontWeight: "600",
   },
   deleteButton: {
-    color: "#dc2626",
+    color: "#ef4444",
     fontWeight: "600",
   },
   addButton: {
-    backgroundColor: "#1e3a8a",
-    margin: 20,
-    paddingVertical: 14,
-    borderRadius: 10,
+    backgroundColor: "#1e40af",
+    margin: 1,
+    marginTop: 1,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
   addButtonText: {
     color: "#fff",
@@ -262,71 +349,86 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   backButton: {
-    backgroundColor: "#94a3b8",
+    backgroundColor: "#64748b",
     marginHorizontal: 20,
     marginBottom: 30,
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 15,
   },
 
   /* ========= MODAL ========= */
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContainer: {
     width: "90%",
     backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#1e3a8a",
-    marginBottom: 15,
+    color: "#1e40af",
+    marginBottom: 20,
     textAlign: "center",
   },
   modalInput: {
-    borderWidth: 1,
-    borderColor: "#94a3b8",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 15,
+    backgroundColor: "#f8fafc",
   },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+    marginTop: 15,
   },
   saveButton: {
-    backgroundColor: "#1e3a8a",
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: "#1e40af",
+    padding: 14,
+    borderRadius: 12,
     width: "48%",
     alignItems: "center",
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 15,
   },
   cancelButton: {
-    backgroundColor: "#e2e8f0",
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: "#f1f5f9",
+    padding: 14,
+    borderRadius: 12,
     width: "48%",
     alignItems: "center",
   },
   cancelButtonText: {
-    color: "#1e3a8a",
+    color: "#475569",
     fontWeight: "600",
+    fontSize: 15,
   },
 
   /* ========= LISTA ========= */
@@ -334,145 +436,201 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f8fafc",
   },
   loadingText: {
-    marginTop: 10,
-    color: "#475569",
+    marginTop: 12,
+    color: "#64748b",
+    fontSize: 15,
   },
 
-  /* ========= HISTÃ“RICO ========= */
+  /* ========= HISTÓRICO - MODERNIZADO ========= */
   historyCard: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 15,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 5,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   historyTitle: {
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#1e40af",
+    fontSize: 16,
+    marginBottom: 8,
   },
   historyDate: {
-    color: "#475569",
+    color: "#64748b",
+    fontSize: 14,
+    marginTop: 4,
   },
 
-  /* ========= CONFERÊNCIA - ABAS ========= */
+  /* ========= CONFERÊNCIA - ABAS MODERNIZADAS ========= */
   tabs: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    maxHeight: 70,
-  },
-  tab: { 
-    paddingHorizontal: 20, 
-    paddingVertical: 5, 
-    alignItems: "center" 
-  },
-  tabActive: {
-    borderBottomWidth: 5,
-    borderBottomColor: "#2563eb",
-    backgroundColor: "#eff6ff",
-  },
-  tabText: { 
-    fontSize: 15, 
-    color: "#6b7280", 
-    fontWeight: "600" 
-  },
-  tabCount: { 
-    fontSize: 15, 
-    color: "#9ca3af", 
-    fontWeight: "bold" 
-  },
+  backgroundColor: "#ffffff",
+  paddingVertical: 12,
+  paddingHorizontal: 8,
+  borderBottomWidth: 1,
+  borderBottomColor: "#e5e7eb",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 3,
+  elevation: 3,
+},
 
-  /* ========= CONFERÊNCIA - CARDS E PRESOS ========= */
+tab: { 
+  paddingHorizontal: 20,
+  paddingVertical: 12,
+  marginHorizontal: 6,
+  borderRadius: 12,
+  minWidth: 90,
+  alignItems: "center",
+  backgroundColor: "#f8fafc",
+  borderWidth: 1,
+  borderColor: "#e2e8f0",
+},
+
+tabActive: {
+  backgroundColor: "#3b82f6",
+  borderColor: "#3b82f6",
+  shadowColor: "#3b82f6",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 4,
+},
+
+tabText: { 
+  fontSize: 15,
+  color: "#64748b",
+  fontWeight: "600",
+  letterSpacing: 0.3,
+},
+
+tabCount: { 
+  fontSize: 12,
+  color: "#94a3b8",
+  fontWeight: "600",
+  marginTop: 4,
+},
+
+  /* ========= CONFERÊNCIA - CARDS E PRESOS MODERNIZADOS ========= */
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
+    marginTop: 5,
   },
   addBtn: {
-    backgroundColor: "#16a34a",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: "#10b981",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   addBtnText: { 
     color: "#fff", 
-    fontWeight: "bold" 
+    fontWeight: "bold",
+    fontSize: 14,
   },
   card: {
-    padding: 12,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#f1f5f9",
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#fff",
   },
   photo: { 
-    width: 50, 
-    height: 50, 
-    borderRadius: 25, 
-    marginRight: 10 
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
   },
   photoPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#d1d5db",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#e2e8f0",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
   },
   prisonerInfo: { 
     flex: 1 
   },
   prisonerName: { 
-    fontSize: 16, 
+    fontSize: 17, 
     fontWeight: "bold", 
-    color: "#1f2937" 
+    color: "#1e293b",
+    marginBottom: 4,
   },
   prisonerDetail: { 
-    fontSize: 12, 
-    color: "#6b7280", 
-    marginTop: 2 
+    fontSize: 13, 
+    color: "#64748b", 
+    marginTop: 3 
   },
   badges: {
     flexDirection: "row",
-    marginTop: 5,
-    gap: 5,
+    marginTop: 8,
+    gap: 6,
     flexWrap: "wrap",
   },
   badge: {
-    backgroundColor: "#e9d5ff",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 5,
+    backgroundColor: "#ddd6fe",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
   badgeText: { 
-    fontSize: 10, 
+    fontSize: 11, 
     fontWeight: "bold" 
   },
   actions: { 
-    flexDirection: "row" 
+    flexDirection: "row",
+    gap: 8,
   },
   editBtn: {
     backgroundColor: "#f59e0b",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
+    shadowColor: "#f59e0b",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   delBtn: {
     backgroundColor: "#ef4444",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#ef4444",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   delText: { 
     color: "#fff", 
@@ -480,77 +638,104 @@ const styles = StyleSheet.create({
     fontSize: 16 
   },
 
-  /* ========= CONFERÊNCIA - CELAS ========= */
+  /* ========= CONFERÊNCIA - CELAS MODERNIZADAS ========= */
   cellCardNew: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: 16,
+    marginBottom: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#e2e8f0",
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cellHeaderNew: {
-    backgroundColor: "#1d4ed8",
-    padding: 15,
+    backgroundColor: "#3b82f6",
+    padding: 18,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   cellTitleNew: { 
     color: "#fff", 
-    fontSize: 18, 
+    fontSize: 19, 
     fontWeight: "bold" 
   },
   cellCount: { 
     color: "#fff", 
-    fontSize: 12, 
-    fontWeight: "bold" 
+    fontSize: 13, 
+    fontWeight: "bold",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   addPrisonerBtn: {
-    backgroundColor: "#2563eb",
-    margin: 12,
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "#3b82f6",
+    margin: 16,
+    padding: 14,
+    borderRadius: 12,
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#60a5fa",
+    borderStyle: "dashed",
   },
   addPrisonerText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 16 
+    fontSize: 15 
   },
 
-  /* ========= CONFERÊNCIA - MODAL COMPLETO ========= */
+  /* ========= CONFERÊNCIA - MODAL COMPLETO MODERNIZADO ========= */
   modal: {
     backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     maxHeight: "90%",
+    width: "90%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
-    fontSize: 16,
+    borderWidth: 1.5,
+    borderColor: "#cbd5e1",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    fontSize: 15,
+    backgroundColor: "#f8fafc",
   },
   photoBtn: {
-    backgroundColor: "#6366f1",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "#8b5cf6",
+    padding: 14,
+    borderRadius: 12,
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   photoBtnText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 16 
+    fontSize: 15 
   },
   photoPreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignSelf: "center",
-    marginBottom: 15,
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: "#e2e8f0",
   },
   checkboxes: {
     flexDirection: "row",
@@ -562,171 +747,207 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "48%",
-    marginBottom: 12,
+    marginBottom: 14,
+    backgroundColor: "#f8fafc",
+    padding: 10,
+    borderRadius: 10,
   },
   checkBox: {
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     borderWidth: 2,
-    borderColor: "#d1d5db",
-    borderRadius: 4,
-    marginRight: 8,
+    borderColor: "#cbd5e1",
+    borderRadius: 6,
+    marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#fff",
   },
   checkBoxActive: { 
-    backgroundColor: "#2563eb", 
-    borderColor: "#2563eb" 
+    backgroundColor: "#3b82f6", 
+    borderColor: "#3b82f6" 
   },
   checkmark: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 10 
+    fontSize: 14 
   },
   checkLabel: { 
     fontSize: 14, 
-    color: "#1f2937" 
+    color: "#1e293b",
+    fontWeight: "500",
   },
   modalBtns: { 
     flexDirection: "row", 
-    gap: 10 
+    gap: 12,
+    marginTop: 10,
   },
   cancelBtn: {
     flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: "#6b7280",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#f1f5f9",
     alignItems: "center",
   },
   saveBtn2: {
     flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: "#16a34a",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#10b981",
     alignItems: "center",
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   btnText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 16 
+    fontSize: 15 
   },
 
-  /* ========= LISTA E BUSCA ========= */
+  /* ========= LISTA E BUSCA MODERNIZADOS ========= */
   searchArea: { 
     backgroundColor: "#fff", 
-    padding: 15, 
+    padding: 18, 
     borderBottomWidth: 1, 
-    borderBottomColor: "#e5e7eb" 
+    borderBottomColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchBtns: { 
     flexDirection: "row", 
-    gap: 8, 
-    marginBottom: 10 
+    gap: 10, 
+    marginBottom: 14 
   },
   searchBtn: { 
     flex: 1, 
-    paddingVertical: 8, 
-    borderRadius: 8, 
-    backgroundColor: "#f3f4f6", 
-    alignItems: "center" 
+    paddingVertical: 10, 
+    borderRadius: 10, 
+    backgroundColor: "#f1f5f9", 
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   searchBtnActive: { 
-    backgroundColor: "#2563eb" 
+    backgroundColor: "#3b82f6",
+    borderColor: "#3b82f6",
   },
   searchBtnText: { 
     fontSize: 13, 
     fontWeight: "600", 
-    color: "#6b7280" 
+    color: "#64748b" 
   },
   searchInput: { 
-    borderWidth: 1, 
-    borderColor: "#d1d5db", 
-    borderRadius: 8, 
-    padding: 12, 
-    fontSize: 16, 
-    backgroundColor: "#f9fafb" 
+    borderWidth: 1.5, 
+    borderColor: "#cbd5e1", 
+    borderRadius: 12, 
+    padding: 14, 
+    fontSize: 15, 
+    backgroundColor: "#f8fafc" 
   },
   confBtns: { 
     flexDirection: "row", 
-    gap: 10, 
-    marginTop: 12 
+    gap: 12, 
+    marginTop: 14 
   },
   confBtn: { 
     flex: 1, 
-    backgroundColor: "#16a34a", 
-    padding: 12, 
-    borderRadius: 8, 
-    alignItems: "center" 
+    backgroundColor: "#10b981", 
+    padding: 14, 
+    borderRadius: 12, 
+    alignItems: "center",
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   confBtnText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 15 
+    fontSize: 14 
   },
   saveBtn: { 
-    backgroundColor: "#2563eb", 
-    paddingHorizontal: 20, 
-    borderRadius: 8, 
-    justifyContent: "center" 
+    backgroundColor: "#3b82f6", 
+    paddingHorizontal: 24, 
+    borderRadius: 12, 
+    justifyContent: "center",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveBtnText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 15 
+    fontSize: 14 
   },
   printBtn: { 
-    backgroundColor: "#7c3aed", 
-    padding: 12, 
-    borderRadius: 8, 
+    backgroundColor: "#8b5cf6", 
+    padding: 14, 
+    borderRadius: 12, 
     alignItems: "center", 
-    marginTop: 12 
+    marginTop: 5,
+    marginBottom: 10,
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   printBtnText: { 
     color: "#fff", 
     fontWeight: "bold", 
-    fontSize: 15 
+    fontSize: 14 
   },
   listCard: { 
     backgroundColor: "#fff", 
-    borderRadius: 10, 
-    marginBottom: 10, 
-    padding: 12, 
+    borderRadius: 14, 
+    marginBottom: 12, 
+    padding: 16, 
     flexDirection: "row", 
     alignItems: "center", 
     borderWidth: 1, 
-    borderColor: "#e5e7eb" 
+    borderColor: "#e2e8f0",
+    shadowColor: "#1e40af",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   checkbox: { 
-    width: 30, 
-    height: 30, 
+    width: 32, 
+    height: 32, 
     borderWidth: 2, 
-    borderColor: "#d1d5db", 
-    borderRadius: 6, 
-    marginRight: 10, 
+    borderColor: "#cbd5e1", 
+    borderRadius: 8, 
+    marginRight: 12, 
     justifyContent: "center", 
-    alignItems: "center" 
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   checkboxActive: { 
-    backgroundColor: "#16a34a", 
-    borderColor: "#16a34a" 
+    backgroundColor: "#10b981", 
+    borderColor: "#10b981" 
   },
   location: { 
     fontSize: 12, 
-    color: "#2563eb", 
+    color: "#3b82f6", 
     fontWeight: "bold", 
-    marginTop: 4, 
+    marginTop: 6, 
     backgroundColor: "#eff6ff", 
-    paddingHorizontal: 8, 
-    paddingVertical: 3, 
-    borderRadius: 5, 
-    alignSelf: "flex-start" 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    borderRadius: 8, 
+    alignSelf: "flex-start",
+    overflow: "hidden",
   },
-  headerSub: { 
-    color: "#cfcfcfce", 
-    fontSize: 20 
-  },
-
-  
 });
 
 export default styles;

@@ -1,7 +1,6 @@
 // ============================================
-// TELA DE CONFERÊNCIA - Sistema Prisional
-// Com abas, fotos, checkboxes e todas funcionalidades
-// Estilos separados no arquivo styles.ts
+// TELA DE CONFERÊNCIA COM FIREBASE - Sistema Prisional
+// app/conferencia/index.tsx
 // ============================================
 
 import React, { useState, useEffect } from "react";
@@ -13,54 +12,71 @@ import {
   Modal,
   TextInput,
   Image,
-  SafeAreaView,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-} from "react-native-safe-area-context";
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  getAllPrisoners,
+  addPrisoner,
+  updatePrisoner,
+  deletePrisoner,
+  getPrisonersByPavilion,
+  getHospitalPrisoners,
+  Prisoner,
+} from "../../services/prisonerService";
+import { uploadPrisonerPhoto, deletePrisonerPhoto } from "../../services/storageService";
 import styles from "../styles";
 
 // ============================================
 // CONSTANTES
 // ============================================
-const STORAGE_KEYS = {
-  PAVILIONS: "@prison_pavilions",
-  HOSPITAL: "@prison_hospital",
+const PAVILIONS_CONFIG = {
+  A: 20,
+  B: 20,
+  Triagem: 8,
+  SAT: 1,
 };
 
 export default function Conferencia() {
   const router = useRouter();
+  const { user } = useAuth();
 
   // ============================================
   // ESTADOS
   // ============================================
   const [isLoading, setIsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("A");
 
-  // Estrutura de pavilhões
-  const [pavilions, setPavilions] = useState({
+  // Estrutura de dados organizada por pavilhão e cela
+  const [pavilions, setPavilions] = useState<{
+    [key: string]: Array<{ id: number; prisoners: Prisoner[] }>;
+  }>({
     A: Array(20).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
     B: Array(20).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
     Triagem: Array(8).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
     SAT: Array(1).fill(null).map((_, i) => ({ id: 1, prisoners: [] })),
   });
 
-  const [hospital, setHospital] = useState([]);
+  const [hospital, setHospital] = useState<Prisoner[]>([]);
 
   // Modais e seleção
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedCell, setSelectedCell] = useState(null);
-  const [selectedPavilion, setSelectedPavilion] = useState(null);
+  const [selectedCell, setSelectedCell] = useState<number | null>(null);
+  const [selectedPavilion, setSelectedPavilion] = useState<string | null>(null);
   const [isHospital, setIsHospital] = useState(false);
 
-  const [editingPrisoner, setEditingPrisoner] = useState(null);
-  const [editingLocation, setEditingLocation] = useState(null);
+  const [editingPrisoner, setEditingPrisoner] = useState<any>(null);
+  const [editingLocation, setEditingLocation] = useState<any>(null);
 
   // Formulário de novo preso
   const [newPrisoner, setNewPrisoner] = useState({
@@ -78,43 +94,50 @@ export default function Conferencia() {
   // CARREGAMENTO INICIAL
   // ============================================
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (user) {
+      loadAllData();
+    }
+  }, [user]);
 
   const loadAllData = async () => {
+    if (!user) return;
+
     try {
       setIsLoading(true);
 
-      // Carrega pavilhões
-      const savedPavilions = await AsyncStorage.getItem(STORAGE_KEYS.PAVILIONS);
-      if (savedPavilions) setPavilions(JSON.parse(savedPavilions));
+      // Carregar todos os presos do Firebase
+      const allPrisoners = await getAllPrisoners(user.uid);
 
-      // Carrega hospital
-      const savedHospital = await AsyncStorage.getItem(STORAGE_KEYS.HOSPITAL);
-      if (savedHospital) setHospital(JSON.parse(savedHospital));
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível carregar os dados.");
+      // Organizar presos por pavilhão e cela
+      const newPavilions: any = {
+        A: Array(20).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
+        B: Array(20).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
+        Triagem: Array(8).fill(null).map((_, i) => ({ id: i + 1, prisoners: [] })),
+        SAT: Array(1).fill(null).map((_, i) => ({ id: 1, prisoners: [] })),
+      };
+
+      const hospitalPrisoners: Prisoner[] = [];
+
+      allPrisoners.forEach((prisoner) => {
+        if (prisoner.isHospital) {
+          hospitalPrisoners.push(prisoner);
+        } else if (prisoner.pavilion && prisoner.cellId) {
+          const pavilion = prisoner.pavilion;
+          const cellIndex = parseInt(prisoner.cellId) - 1;
+          
+          if (newPavilions[pavilion] && newPavilions[pavilion][cellIndex]) {
+            newPavilions[pavilion][cellIndex].prisoners.push(prisoner);
+          }
+        }
+      });
+
+      setPavilions(newPavilions);
+      setHospital(hospitalPrisoners);
+    } catch (error: any) {
+      console.error("Erro ao carregar dados:", error);
+      Alert.alert("Erro", error.message || "Não foi possível carregar os dados");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // ============================================
-  // FUNÇÕES DE SALVAMENTO
-  // ============================================
-  const savePavilions = async (data) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.PAVILIONS, JSON.stringify(data));
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível salvar.");
-    }
-  };
-
-  const saveHospital = async (data) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.HOSPITAL, JSON.stringify(data));
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível salvar.");
     }
   };
 
@@ -137,6 +160,7 @@ export default function Conferencia() {
 
       return !result.canceled ? result.assets[0].uri : null;
     } catch (error) {
+      console.error("Erro ao tirar foto:", error);
       return null;
     }
   };
@@ -145,88 +169,143 @@ export default function Conferencia() {
   // FUNÇÃO: Adicionar preso
   // ============================================
   const handleAddPrisoner = async () => {
+    if (!user) {
+      Alert.alert("Erro", "Usuário não autenticado");
+      return;
+    }
+
     if (!newPrisoner.name.trim() || !newPrisoner.matricula.trim()) {
       Alert.alert("Atenção", "Preencha nome e matrícula");
       return;
     }
 
-    if (isHospital) {
-      const newHospital = [...hospital, { id: Date.now(), ...newPrisoner }];
-      setHospital(newHospital);
-      await saveHospital(newHospital);
-    } else {
-      const updated = { ...pavilions };
-      updated[selectedPavilion][selectedCell].prisoners.push({
-        id: Date.now(),
-        ...newPrisoner,
-      });
-      setPavilions(updated);
-      await savePavilions(updated);
-    }
+    try {
+      setUploading(true);
 
-    setNewPrisoner({
-      name: "",
-      matricula: "",
-      photo: "",
-      hasTV: false,
-      hasRadio: false,
-      hasFan: false,
-      hasMattress: false,
-      entryDate: new Date().toISOString().split("T")[0],
-    });
-    setShowAddModal(false);
+      // Upload da foto se existir
+      let photoUrl = newPrisoner.photo;
+      if (newPrisoner.photo && newPrisoner.photo.startsWith("file://")) {
+        const tempId = `temp_${Date.now()}`;
+        photoUrl = await uploadPrisonerPhoto(newPrisoner.photo, tempId);
+      }
+
+      // Adicionar preso no Firebase
+      const prisonerData: any = {
+        name: newPrisoner.name,
+        matricula: newPrisoner.matricula,
+        photo: photoUrl,
+        hasTV: newPrisoner.hasTV,
+        hasRadio: newPrisoner.hasRadio,
+        hasFan: newPrisoner.hasFan,
+        hasMattress: newPrisoner.hasMattress,
+        entryDate: newPrisoner.entryDate,
+        isHospital: isHospital,
+      };
+
+      if (!isHospital && selectedPavilion && selectedCell !== null) {
+        prisonerData.pavilion = selectedPavilion;
+        prisonerData.cellId = (selectedCell + 1).toString();
+      }
+
+      await addPrisoner(prisonerData, user.uid);
+      
+      Alert.alert("Sucesso", "Preso cadastrado com sucesso!");
+      
+      // Limpar formulário e recarregar dados
+      setNewPrisoner({
+        name: "",
+        matricula: "",
+        photo: "",
+        hasTV: false,
+        hasRadio: false,
+        hasFan: false,
+        hasMattress: false,
+        entryDate: new Date().toISOString().split("T")[0],
+      });
+      
+      setShowAddModal(false);
+      await loadAllData();
+    } catch (error: any) {
+      console.error("Erro ao adicionar:", error);
+      Alert.alert("Erro", error.message || "Não foi possível adicionar o preso");
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ============================================
   // FUNÇÃO: Editar preso
   // ============================================
   const handleEditPrisoner = async () => {
-    if (!editingPrisoner.name.trim() || !editingPrisoner.matricula.trim()) {
+    if (!user) {
+      Alert.alert("Erro", "Usuário não autenticado");
+      return;
+    }
+
+    if (!editingPrisoner?.name?.trim() || !editingPrisoner?.matricula?.trim()) {
       Alert.alert("Atenção", "Preencha nome e matrícula");
       return;
     }
 
     try {
-      if (editingLocation.isHospital) {
-        const newHospital = hospital.map((p) =>
-          p.id === editingLocation.prisonerId ? { ...p, ...editingPrisoner } : p
+      setUploading(true);
+
+      // Upload da foto se foi alterada
+      let photoUrl = editingPrisoner.photo;
+      if (editingPrisoner.photo && editingPrisoner.photo.startsWith("file://")) {
+        photoUrl = await uploadPrisonerPhoto(
+          editingPrisoner.photo,
+          editingPrisoner.id
         );
-        setHospital(newHospital);
-        await saveHospital(newHospital);
-      } else {
-        const { pavilion, cellIndex, prisonerId } = editingLocation;
-        const updated = { ...pavilions };
-        updated[pavilion][cellIndex].prisoners = updated[pavilion][
-          cellIndex
-        ].prisoners.map((p) =>
-          p.id === prisonerId ? { ...p, ...editingPrisoner } : p
-        );
-        setPavilions(updated);
-        await savePavilions(updated);
       }
-      Alert.alert("Sucesso", "Atualizado!");
+
+      // Atualizar no Firebase
+      await updatePrisoner(editingPrisoner.id, {
+        name: editingPrisoner.name,
+        matricula: editingPrisoner.matricula,
+        photo: photoUrl,
+        hasTV: editingPrisoner.hasTV,
+        hasRadio: editingPrisoner.hasRadio,
+        hasFan: editingPrisoner.hasFan,
+        hasMattress: editingPrisoner.hasMattress,
+        entryDate: editingPrisoner.entryDate,
+      });
+
+      Alert.alert("Sucesso", "Preso atualizado!");
       setShowEditModal(false);
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível atualizar.");
+      setEditingPrisoner(null);
+      await loadAllData();
+    } catch (error: any) {
+      console.error("Erro ao editar:", error);
+      Alert.alert("Erro", error.message || "Não foi possível atualizar");
+    } finally {
+      setUploading(false);
     }
   };
 
   // ============================================
   // FUNÇÃO: Remover preso
   // ============================================
-  const handleRemovePrisoner = async (pavilion, cellIndex, prisonerId) => {
-    Alert.alert("Confirmar", "Remover preso?", [
+  const handleRemovePrisoner = async (prisoner: Prisoner) => {
+    Alert.alert("Confirmar", `Remover ${prisoner.name}?`, [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Remover",
         style: "destructive",
         onPress: async () => {
-          const updated = { ...pavilions };
-          updated[pavilion][cellIndex].prisoners = updated[pavilion][
-            cellIndex
-          ].prisoners.filter((p) => p.id !== prisonerId);
-          setPavilions(updated);
-          await savePavilions(updated);
+          try {
+            // Deletar foto se existir
+            if (prisoner.photo) {
+              await deletePrisonerPhoto(prisoner.id);
+            }
+
+            // Deletar preso
+            await deletePrisoner(prisoner.id);
+            Alert.alert("Sucesso", "Preso removido");
+            await loadAllData();
+          } catch (error: any) {
+            Alert.alert("Erro", error.message || "Não foi possível remover");
+          }
         },
       },
     ]);
@@ -235,15 +314,27 @@ export default function Conferencia() {
   // ============================================
   // FUNÇÕES AUXILIARES
   // ============================================
-  const getTotalPrisoners = (pavilion) => {
-    return pavilions[pavilion].reduce(
-      (sum, cell) => sum + cell.prisoners.length,
-      0
-    );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
-  const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("pt-BR");
+  const openAddModal = (pavilion?: string, cellIndex?: number, isHosp = false) => {
+    setSelectedPavilion(pavilion || null);
+    setSelectedCell(cellIndex !== undefined ? cellIndex : null);
+    setIsHospital(isHosp);
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (prisoner: Prisoner) => {
+    setEditingPrisoner({ ...prisoner });
+    setEditingLocation({
+      isHospital: prisoner.isHospital,
+      pavilion: prisoner.pavilion,
+      cellId: prisoner.cellId,
+      prisonerId: prisoner.id,
+    });
+    setShowEditModal(true);
+  };
 
   // ============================================
   // RENDERIZAÇÃO - LOADING
@@ -252,10 +343,16 @@ export default function Conferencia() {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Carregando...</Text>
+        <Text style={styles.loadingText}>Carregando dados...</Text>
       </SafeAreaView>
     );
   }
+
+  const currentPavilion = pavilions[activeTab] || [];
+  const totalPrisoners =
+    Object.values(pavilions)
+      .flat()
+      .reduce((sum, cell) => sum + cell.prisoners.length, 0) + hospital.length;
 
   // ============================================
   // RENDERIZAÇÃO PRINCIPAL
@@ -265,202 +362,172 @@ export default function Conferencia() {
       <StatusBar style="light" />
 
       {/* CABEÇALHO */}
+      {/* CABEÇALHO MODERNO */}
+
       <View style={styles.header}>
-        <TouchableOpacity style={styles.logoutBtnList} onPress={() => router.push("/menu") }>
-          <Text style={styles.backText}>Voltar</Text>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerTitle}>Lista</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.circleBackButton} onPress={() => router.push("/menu")}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => router.replace("/login")}>
-          <Text style={styles.logoutText}>Sair</Text>
-        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Adcionar</Text>
+          <Text style={styles.headerSub}>Total: {totalPrisoners}</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={() => router.replace("/login")}>
+            <Text style={styles.logoutText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* ABAS DE NAVEGAÇÃO */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabs}
-      >
-        {["A", "B", "Triagem", "SAT", "Hospital"].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-          >
-            <Text style={styles.tabText}>{tab === "Hospital" ? "Hosp" : tab}</Text>
-            <Text style={styles.tabCount}>
-              {tab === "Hospital" ? hospital.length : getTotalPrisoners(tab)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
+      {/* ABAS */}
+      <View style={styles.tabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10 }}>
+          {["A", "B", "Triagem", "SAT", "Hospital"].map((tab) => { const count = tab === "Hospital" ? hospital.length
+          : pavilions[tab]?.reduce((sum, cell) => sum + cell.prisoners.length, 0) || 0;
+          return (
+            <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.tabActive]} onPress={() => setActiveTab(tab)}>
+              <Text style={[styles.tabText, activeTab === tab && { color: "#fff" }]}>{tab}</Text>
+              <Text style={[styles.tabCount, activeTab === tab && { color: "#fff" }]}>{count}</Text>
+            </TouchableOpacity>
+          );})}
+        </ScrollView>
+      </View>
+      
       {/* CONTEÚDO */}
       <ScrollView style={styles.content}>
         {activeTab === "Hospital" ? (
-          // ABA HOSPITAL
-          <View>
+          // HOSPITAL
+          <>
             <View style={styles.headerRow}>
-              <Text style={styles.sectionTitle}>Hospital</Text>
+              <Text style={styles.sectionTitle}>Hospital - {hospital.length} presos</Text>
               <TouchableOpacity
                 style={styles.addBtn}
-                onPress={() => {
-                  setIsHospital(true);
-                  setShowAddModal(true);
-                }}
+                onPress={() => openAddModal(undefined, undefined, true)}
               >
                 <Text style={styles.addBtnText}>+ Adicionar</Text>
               </TouchableOpacity>
             </View>
 
-            {hospital.map((p) => (
-              <View key={p.id} style={styles.card}>
-                {p.photo ? (
-                  <Image source={{ uri: p.photo }} style={styles.photo} />
-                ) : (
-                  <View style={styles.photoPlaceholder}>
-                    <Text>?</Text>
-                  </View>
-                )}
-
-                <View style={styles.prisonerInfo}>
-                  <Text style={styles.prisonerName}>{p.name}</Text>
-                  <Text style={styles.prisonerDetail}>Mat: {p.matricula}</Text>
-                </View>
-
-                <View style={styles.actions}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setEditingPrisoner(p);
-                      setEditingLocation({ isHospital: true, prisonerId: p.id });
-                      setShowEditModal(true);
-                    }}
-                    style={styles.editBtn}
-                  >
-                    <Text>✏️</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      Alert.alert("Confirmar", "Remover?", [
-                        { text: "Cancelar", style: "cancel" },
-                        {
-                          text: "Remover",
-                          style: "destructive",
-                          onPress: async () => {
-                            const newH = hospital.filter((x) => x.id !== p.id);
-                            setHospital(newH);
-                            await saveHospital(newH);
-                          },
-                        },
-                      ]);
-                    }}
-                    style={styles.delBtn}
-                  >
-                    <Text style={styles.delText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
+            {hospital.length === 0 ? (
+              <View style={{ padding: 40, alignItems: "center" }}>
+                <Text style={{ fontSize: 50, marginBottom: 20 }}>🏥</Text>
+                <Text style={{ fontSize: 16, color: "#6b7280", textAlign: "center" }}>
+                  Nenhum preso no hospital
+                </Text>
               </View>
-            ))}
-          </View>
+            ) : (
+              hospital.map((prisoner) => (
+                <View key={prisoner.id} style={styles.card}>
+                  {prisoner.photo ? (
+                    <Image source={{ uri: prisoner.photo }} style={styles.photo} />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <Text>?</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.prisonerInfo}>
+                    <Text style={styles.prisonerName}>{prisoner.name}</Text>
+                    <Text style={styles.prisonerDetail}>Mat: {prisoner.matricula}</Text>
+                  </View>
+
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => openEditModal(prisoner)}
+                    >
+                      <Text style={{ color: "#fff" }}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.delBtn}
+                      onPress={() => handleRemovePrisoner(prisoner)}
+                    >
+                      <Text style={styles.delText}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+          </>
         ) : (
-          // ABAS DE PAVILHÕES
-          <View>
-            <Text style={styles.sectionTitle}>
-              Pavilhão {activeTab} - {getTotalPrisoners(activeTab)} presos
-            </Text>
+          // PAVILHÕES
+          currentPavilion.map((cell, cellIndex) => (
+            <View key={cell.id} style={styles.cellCardNew}>
+              <View style={styles.cellHeaderNew}>
+                <Text style={styles.cellTitleNew}>Cela {cell.id}</Text>
+                <Text style={styles.cellCount}>{cell.prisoners.length} presos</Text>
+              </View>
 
-            {pavilions[activeTab].map((cell, idx) => (
-              <View key={cell.id} style={styles.cellCardNew}>
-                <View style={styles.cellHeaderNew}>
-                  <Text style={styles.cellTitleNew}>Cela {cell.id}</Text>
-                  <Text style={styles.cellCount}>{cell.prisoners.length}</Text>
-                </View>
-
-                {cell.prisoners.map((p) => (
-                  <View key={p.id} style={styles.card}>
-                    {p.photo ? (
-                      <Image source={{ uri: p.photo }} style={styles.photo} />
-                    ) : (
-                      <View style={styles.photoPlaceholder}>
-                        <Text>?</Text>
-                      </View>
-                    )}
-
-                    <View style={styles.prisonerInfo}>
-                      <Text style={styles.prisonerName}>{p.name}</Text>
-                      <Text style={styles.prisonerDetail}>
-                        Mat: {p.matricula}
-                      </Text>
-                      <Text style={styles.prisonerDetail}>
-                        Entrada: {formatDate(p.entryDate)}
-                      </Text>
-                      <View style={styles.badges}>
-                        {p.hasTV && (
-                          <View style={styles.badge}>
-                            <Text style={styles.badgeText}>📺</Text>
-                          </View>
-                        )}
-                        {p.hasRadio && (
-                          <View style={styles.badge}>
-                            <Text style={styles.badgeText}>📻</Text>
-                          </View>
-                        )}
-                        {p.hasFan && (
-                          <View style={styles.badge}>
-                            <Text style={styles.badgeText}>🌀</Text>
-                          </View>
-                        )}
-                        {p.hasMattress && (
-                          <View style={styles.badge}>
-                            <Text style={styles.badgeText}>🛏️</Text>
-                          </View>
-                        )}
-                      </View>
+              {cell.prisoners.map((prisoner) => (
+                <View key={prisoner.id} style={styles.card}>
+                  {prisoner.photo ? (
+                    <Image source={{ uri: prisoner.photo }} style={styles.photo} />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <Text>?</Text>
                     </View>
+                  )}
 
-                    <View style={styles.actions}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setEditingPrisoner(p);
-                          setEditingLocation({
-                            pavilion: activeTab,
-                            cellIndex: idx,
-                            prisonerId: p.id,
-                          });
-                          setShowEditModal(true);
-                        }}
-                        style={styles.editBtn}
-                      >
-                        <Text>✏️</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() =>
-                          handleRemovePrisoner(activeTab, idx, p.id)
-                        }
-                        style={styles.delBtn}
-                      >
-                        <Text style={styles.delText}>✕</Text>
-                      </TouchableOpacity>
+                  <View style={styles.prisonerInfo}>
+                    <Text style={styles.prisonerName}>{prisoner.name}</Text>
+                    <Text style={styles.prisonerDetail}>Mat: {prisoner.matricula}</Text>
+                    <Text style={styles.prisonerDetail}>
+                      Entrada: {formatDate(prisoner.entryDate)}
+                    </Text>
+                    <View style={styles.badges}>
+                      {prisoner.hasTV && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>📺</Text>
+                        </View>
+                      )}
+                      {prisoner.hasRadio && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>📻</Text>
+                        </View>
+                      )}
+                      {prisoner.hasFan && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>🌀</Text>
+                        </View>
+                      )}
+                      {prisoner.hasMattress && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>🛏️</Text>
+                        </View>
+                      )}
                     </View>
                   </View>
-                ))}
 
-                <TouchableOpacity
-                  style={styles.addPrisonerBtn}
-                  onPress={() => {
-                    setSelectedPavilion(activeTab);
-                    setSelectedCell(idx);
-                    setIsHospital(false);
-                    setShowAddModal(true);
-                  }}
-                >
-                  <Text style={styles.addPrisonerText}>+ Adicionar Preso</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => openEditModal(prisoner)}
+                    >
+                      <Text style={{ color: "#fff" }}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.delBtn}
+                      onPress={() => handleRemovePrisoner(prisoner)}
+                    >
+                      <Text style={styles.delText}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+
+              <TouchableOpacity
+                style={styles.addPrisonerBtn}
+                onPress={() => openAddModal(activeTab, cellIndex)}
+              >
+                <Text style={styles.addPrisonerText}>
+                  + Adicionar preso na Cela {cell.id}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))
         )}
       </ScrollView>
 
@@ -478,93 +545,91 @@ export default function Conferencia() {
           style={styles.modalOverlay}
         >
           <View style={styles.modal}>
-            <Text style={styles.modalTitle}>
+            <Text style={styles.modalTitle}>➕ Adicionar Preso</Text>
+            <Text style={{ textAlign: "center", color: "#6b7280", marginBottom: 15 }}>
               {isHospital
                 ? "Hospital"
                 : `Pav. ${selectedPavilion}, Cela ${
-                    pavilions[selectedPavilion]?.[selectedCell]?.id
+                    selectedCell !== null ? selectedCell + 1 : "?"
                   }`}
             </Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Nome"
-              value={newPrisoner.name}
-              onChangeText={(t) => setNewPrisoner({ ...newPrisoner, name: t })}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Matrícula"
-              value={newPrisoner.matricula}
-              onChangeText={(t) =>
-                setNewPrisoner({ ...newPrisoner, matricula: t })
-              }
-            />
-
-            <TouchableOpacity
-              style={styles.photoBtn}
-              onPress={async () => {
-                const uri = await takePhoto();
-                if (uri) setNewPrisoner({ ...newPrisoner, photo: uri });
-              }}
-            >
-              <Text style={styles.photoBtnText}>
-                {newPrisoner.photo ? "📷 Alterar" : "📷 Adicionar"}
-              </Text>
-            </TouchableOpacity>
-
-            {newPrisoner.photo && (
-              <Image
-                source={{ uri: newPrisoner.photo }}
-                style={styles.photoPreview}
+            <ScrollView>
+              <TextInput
+                style={styles.input}
+                placeholder="Nome"
+                value={newPrisoner.name}
+                onChangeText={(t) => setNewPrisoner({ ...newPrisoner, name: t })}
               />
-            )}
 
-            {!isHospital && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Data (AAAA-MM-DD)"
-                  value={newPrisoner.entryDate}
-                  onChangeText={(t) =>
-                    setNewPrisoner({ ...newPrisoner, entryDate: t })
-                  }
-                />
+              <TextInput
+                style={styles.input}
+                placeholder="Matrícula"
+                value={newPrisoner.matricula}
+                onChangeText={(t) => setNewPrisoner({ ...newPrisoner, matricula: t })}
+              />
 
-                <View style={styles.checkboxes}>
-                  {[
-                    { key: "hasTV", label: "📺 TV" },
-                    { key: "hasRadio", label: "📻 Rádio" },
-                    { key: "hasFan", label: "🌀 Ventilador" },
-                    { key: "hasMattress", label: "🛏️ Colchão" },
-                  ].map(({ key, label }) => (
-                    <TouchableOpacity
-                      key={key}
-                      style={styles.checkItem}
-                      onPress={() =>
-                        setNewPrisoner({
-                          ...newPrisoner,
-                          [key]: !newPrisoner[key],
-                        })
-                      }
-                    >
-                      <View
-                        style={[
-                          styles.checkBox,
-                          newPrisoner[key] && styles.checkBoxActive,
-                        ]}
+              <TouchableOpacity
+                style={styles.photoBtn}
+                onPress={async () => {
+                  const uri = await takePhoto();
+                  if (uri) setNewPrisoner({ ...newPrisoner, photo: uri });
+                }}
+                disabled={uploading}
+              >
+                <Text style={styles.photoBtnText}>
+                  {newPrisoner.photo ? "📷 Alterar" : "📷 Adicionar Foto"}
+                </Text>
+              </TouchableOpacity>
+
+              {newPrisoner.photo && (
+                <Image source={{ uri: newPrisoner.photo }} style={styles.photoPreview} />
+              )}
+
+              {!isHospital && (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Data de Entrada (AAAA-MM-DD)"
+                    value={newPrisoner.entryDate}
+                    onChangeText={(t) => setNewPrisoner({ ...newPrisoner, entryDate: t })}
+                  />
+
+                  <View style={styles.checkboxes}>
+                    {[
+                      { key: "hasTV", label: "📺 TV" },
+                      { key: "hasRadio", label: "📻 Rádio" },
+                      { key: "hasFan", label: "🌀 Ventilador" },
+                      { key: "hasMattress", label: "🛏️ Colchão" },
+                    ].map(({ key, label }) => (
+                      <TouchableOpacity
+                        key={key}
+                        style={styles.checkItem}
+                        onPress={() =>
+                          setNewPrisoner({
+                            ...newPrisoner,
+                            [key]: !newPrisoner[key as keyof typeof newPrisoner],
+                          })
+                        }
                       >
-                        {newPrisoner[key] && (
-                          <Text style={styles.checkmark}>✓</Text>
-                        )}
-                      </View>
-                      <Text style={styles.checkLabel}>{label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
+                        <View
+                          style={[
+                            styles.checkBox,
+                            newPrisoner[key as keyof typeof newPrisoner] &&
+                              styles.checkBoxActive,
+                          ]}
+                        >
+                          {newPrisoner[key as keyof typeof newPrisoner] && (
+                            <Text style={styles.checkmark}>✓</Text>
+                          )}
+                        </View>
+                        <Text style={styles.checkLabel}>{label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+            </ScrollView>
 
             <View style={styles.modalBtns}>
               <TouchableOpacity
@@ -582,14 +647,18 @@ export default function Conferencia() {
                     entryDate: new Date().toISOString().split("T")[0],
                   });
                 }}
+                disabled={uploading}
               >
                 <Text style={styles.btnText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveBtn2}
                 onPress={handleAddPrisoner}
+                disabled={uploading}
               >
-                <Text style={styles.btnText}>Adicionar</Text>
+                <Text style={styles.btnText}>
+                  {uploading ? "Salvando..." : "Adicionar"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -612,88 +681,88 @@ export default function Conferencia() {
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>✏️ Editar</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Nome"
-              value={editingPrisoner?.name || ""}
-              onChangeText={(t) =>
-                setEditingPrisoner({ ...editingPrisoner, name: t })
-              }
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Matrícula"
-              value={editingPrisoner?.matricula || ""}
-              onChangeText={(t) =>
-                setEditingPrisoner({ ...editingPrisoner, matricula: t })
-              }
-            />
-
-            <TouchableOpacity
-              style={styles.photoBtn}
-              onPress={async () => {
-                const uri = await takePhoto();
-                if (uri)
-                  setEditingPrisoner({ ...editingPrisoner, photo: uri });
-              }}
-            >
-              <Text style={styles.photoBtnText}>
-                {editingPrisoner?.photo ? "📷 Alterar" : "📷 Adicionar"}
-              </Text>
-            </TouchableOpacity>
-
-            {editingPrisoner?.photo && (
-              <Image
-                source={{ uri: editingPrisoner.photo }}
-                style={styles.photoPreview}
+            <ScrollView>
+              <TextInput
+                style={styles.input}
+                placeholder="Nome"
+                value={editingPrisoner?.name || ""}
+                onChangeText={(t) => setEditingPrisoner({ ...editingPrisoner, name: t })}
               />
-            )}
 
-            {!editingLocation?.isHospital && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Data (AAAA-MM-DD)"
-                  value={editingPrisoner?.entryDate || ""}
-                  onChangeText={(t) =>
-                    setEditingPrisoner({ ...editingPrisoner, entryDate: t })
-                  }
+              <TextInput
+                style={styles.input}
+                placeholder="Matrícula"
+                value={editingPrisoner?.matricula || ""}
+                onChangeText={(t) =>
+                  setEditingPrisoner({ ...editingPrisoner, matricula: t })
+                }
+              />
+
+              <TouchableOpacity
+                style={styles.photoBtn}
+                onPress={async () => {
+                  const uri = await takePhoto();
+                  if (uri) setEditingPrisoner({ ...editingPrisoner, photo: uri });
+                }}
+                disabled={uploading}
+              >
+                <Text style={styles.photoBtnText}>
+                  {editingPrisoner?.photo ? "📷 Alterar" : "📷 Adicionar Foto"}
+                </Text>
+              </TouchableOpacity>
+
+              {editingPrisoner?.photo && (
+                <Image
+                  source={{ uri: editingPrisoner.photo }}
+                  style={styles.photoPreview}
                 />
+              )}
 
-                <View style={styles.checkboxes}>
-                  {[
-                    { key: "hasTV", label: "📺 TV" },
-                    { key: "hasRadio", label: "📻 Rádio" },
-                    { key: "hasFan", label: "🌀 Ventilador" },
-                    { key: "hasMattress", label: "🛏️ Colchão" },
-                  ].map(({ key, label }) => (
-                    <TouchableOpacity
-                      key={key}
-                      style={styles.checkItem}
-                      onPress={() =>
-                        setEditingPrisoner({
-                          ...editingPrisoner,
-                          [key]: !editingPrisoner[key],
-                        })
-                      }
-                    >
-                      <View
-                        style={[
-                          styles.checkBox,
-                          editingPrisoner?.[key] && styles.checkBoxActive,
-                        ]}
+              {!editingLocation?.isHospital && (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Data (AAAA-MM-DD)"
+                    value={editingPrisoner?.entryDate || ""}
+                    onChangeText={(t) =>
+                      setEditingPrisoner({ ...editingPrisoner, entryDate: t })
+                    }
+                  />
+
+                  <View style={styles.checkboxes}>
+                    {[
+                      { key: "hasTV", label: "📺 TV" },
+                      { key: "hasRadio", label: "📻 Rádio" },
+                      { key: "hasFan", label: "🌀 Ventilador" },
+                      { key: "hasMattress", label: "🛏️ Colchão" },
+                    ].map(({ key, label }) => (
+                      <TouchableOpacity
+                        key={key}
+                        style={styles.checkItem}
+                        onPress={() =>
+                          setEditingPrisoner({
+                            ...editingPrisoner,
+                            [key]: !editingPrisoner[key],
+                          })
+                        }
                       >
-                        {editingPrisoner?.[key] && (
-                          <Text style={styles.checkmark}>✓</Text>
-                        )}
-                      </View>
-                      <Text style={styles.checkLabel}>{label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
+                        <View
+                          style={[
+                            styles.checkBox,
+                            editingPrisoner?.[key] && styles.checkBoxActive,
+                          ]}
+                        >
+                          {editingPrisoner?.[key] && (
+                            <Text style={styles.checkmark}>✓</Text>
+                          )}
+                        </View>
+                        <Text style={styles.checkLabel}>{label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+            </ScrollView>
 
             <View style={styles.modalBtns}>
               <TouchableOpacity
@@ -702,14 +771,18 @@ export default function Conferencia() {
                   setShowEditModal(false);
                   setEditingPrisoner(null);
                 }}
+                disabled={uploading}
               >
                 <Text style={styles.btnText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveBtn2}
                 onPress={handleEditPrisoner}
+                disabled={uploading}
               >
-                <Text style={styles.btnText}>Salvar</Text>
+                <Text style={styles.btnText}>
+                  {uploading ? "Salvando..." : "Salvar"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

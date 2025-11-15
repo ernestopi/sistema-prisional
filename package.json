@@ -1,14 +1,12 @@
 {
-  "name": "conferenciapreso",
-  "main": "expo-router/entry",
+  "name": "sistema-prisional-firebase",
   "version": "1.0.0",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -31,6 +29,7 @@
     "expo-symbols": "~1.0.7",
     "expo-system-ui": "~6.0.8",
     "expo-web-browser": "~15.0.9",
+    "firebase": "^12.5.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -42,10 +41,9 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2",
-    "eslint": "^9.25.0",
-    "eslint-config-expo": "~10.0.0"
+    "@babel/core": "^7.24.0",
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
   },
   "private": true
 }

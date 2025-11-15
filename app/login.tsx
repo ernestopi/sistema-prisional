@@ -1,9 +1,9 @@
 // ============================================
-// TELA DE LOGIN COM FIREBASE
-// login_firebase.tsx - Exemplo de implementação
+// TELA DE LOGIN - SEM LOOP
+// login.tsx - Sistema Prisional
 // ============================================
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -28,6 +29,24 @@ export default function LoginFirebase() {
   
   const { login, register, loading } = useAuth();
   const router = useRouter();
+
+  // Bloquear botão voltar
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert("Sair", "Deseja sair do aplicativo?", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Sair", onPress: () => BackHandler.exitApp() }
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -57,7 +76,7 @@ export default function LoginFirebase() {
     try {
       await register(email, password, displayName);
       Alert.alert("Sucesso", "Conta criada com sucesso!");
-      router.replace("/menu_firebase");
+      router.replace("/menu");
     } catch (error: any) {
       Alert.alert("Erro ao Registrar", error.message);
     }

@@ -1,5 +1,5 @@
 // ============================================
-// MENU COM CABEÇALHO FINO E MINIMALISTA
+// MENU - SEM LOOP
 // app/menu.tsx
 // ============================================
 
@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -27,7 +28,25 @@ export default function MenuFirebase() {
   const [totalConferences, setTotalConferences] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Carrega estatísticas ao abrir o menu
+  // Bloquear botão voltar
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert("Atenção", "Deseja sair do aplicativo?", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Sair", onPress: () => BackHandler.exitApp() }
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  // Carregar estatísticas
   useEffect(() => {
     if (user) {
       loadStatistics();
@@ -35,15 +54,15 @@ export default function MenuFirebase() {
   }, [user]);
 
   const loadStatistics = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       
-      // Buscar total de presos
-      const prisoners = await getAllPrisoners(user!.uid);
+      const prisoners = await getAllPrisoners(user.uid);
       setTotalPrisoners(prisoners.length);
       
-      // Buscar total de conferências
-      const conferences = await getAllConferences(user!.uid);
+      const conferences = await getAllConferences(user.uid);
       setTotalConferences(conferences.length);
     } catch (error: any) {
       console.error("Erro ao carregar estatísticas:", error);
@@ -70,40 +89,11 @@ export default function MenuFirebase() {
     ]);
   };
 
-  const clearAllData = async () => {
-    Alert.alert(
-      "Confirmar", 
-      "Apagar todos os dados do Firebase? Esta ação não pode ser desfeita!", 
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Apagar", 
-          style: "destructive", 
-          onPress: async () => {
-            try {
-              Alert.alert("Atenção", "Função de limpeza não implementada por segurança");
-              setTotalPrisoners(0);
-              setTotalConferences(0);
-            } catch (error: any) {
-              Alert.alert("Erro", error.message);
-            }
-          }
-        },
-      ]
-    );
-  };
-
   if (!user) {
     return (
       <SafeAreaView style={styles.menuContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Usuário não autenticado</Text>
-          <TouchableOpacity 
-            style={styles.loginButton} 
-            onPress={() => router.replace("/login")}
-          >
-            <Text style={styles.loginButtonText}>Fazer Login</Text>
-          </TouchableOpacity>
+          <ActivityIndicator size="large" color="#3b82f6" />
         </View>
       </SafeAreaView>
     );
@@ -113,19 +103,15 @@ export default function MenuFirebase() {
     <SafeAreaView style={styles.menuContainer}>
       <StatusBar style="light" />
       
-      {/* CABEÇALHO FINO E MINIMALISTA */}
       <View style={styles.header}>
-        {/* Esquerda - Logo/Ícone */}
         <View style={styles.headerLeft}>
           <Text style={{ fontSize: 24, color: '#fff' }}>🔒</Text>
         </View>
 
-        {/* Centro - Título */}
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Sistema Prisional</Text>
         </View>
 
-        {/* Direita - Botão Sair */}
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.logoutBtn} 
@@ -150,7 +136,6 @@ export default function MenuFirebase() {
           bounces={true}
           contentContainerStyle={{ paddingBottom: 30 }}
         >
-          {/* Card: Adicionar Preso */}
           <TouchableOpacity 
             style={styles.menuCard} 
             onPress={() => router.push("/conferencia")}
@@ -162,7 +147,6 @@ export default function MenuFirebase() {
             </Text>
           </TouchableOpacity>
           
-          {/* Card: Lista e Conferência */}
           <TouchableOpacity 
             style={styles.menuCard} 
             onPress={() => router.push("/lista")}
@@ -174,7 +158,6 @@ export default function MenuFirebase() {
             </Text>
           </TouchableOpacity>
           
-          {/* Card: Histórico */}
           <TouchableOpacity 
             style={styles.menuCard} 
             onPress={() => router.push("/historico")}
@@ -186,7 +169,6 @@ export default function MenuFirebase() {
             </Text>
           </TouchableOpacity>
           
-          {/* Card: Sincronizar */}
           <TouchableOpacity 
             style={[styles.menuCard, {backgroundColor: '#dbeafe'}]} 
             onPress={loadStatistics}
@@ -198,12 +180,12 @@ export default function MenuFirebase() {
             </Text>
           </TouchableOpacity>
           
-         {/* Box com estatísticas */}
           <View style={styles.totalBox}>
             <Text style={styles.totalText}>
               Total: {totalPrisoners} internos
             </Text>
             <Text style={{ color: '#bfdbfe', fontSize: 14, marginTop: 5 }}>
+              Bem-vindo, {user?.displayName || user?.email}
             </Text>
           </View>
         </ScrollView>

@@ -168,18 +168,7 @@ export default function MenuFirebase() {
               {totalConferences} conferências realizadas
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.menuCard, {backgroundColor: '#dbeafe'}]} 
-            onPress={loadStatistics}
-          >
-            <Text style={styles.menuIcon}>🔄</Text>
-            <Text style={styles.menuCardTitle}>Sincronizar</Text>
-            <Text style={styles.menuCardDescription}>
-              Atualizar dados do servidor
-            </Text>
-          </TouchableOpacity>
-          
+                   
           <View style={styles.totalBox}>
             <Text style={styles.totalText}>
               Total: {totalPrisoners} internos

@@ -144,25 +144,6 @@ export default function LoginFirebase() {
               {isRegistering ? "Criar Conta" : "Entrar"}
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{ marginTop: 15 }}
-            onPress={() => setIsRegistering(!isRegistering)}
-          >
-            <Text style={{ textAlign: 'center', color: '#475569' }}>
-              {isRegistering
-                ? "Já tem conta? Fazer login"
-                : "Não tem conta? Registrar-se"}
-            </Text>
-          </TouchableOpacity>
-
-          {!isRegistering && (
-            <View style={styles.loginInfo}>
-              <Text style={styles.loginInfoTitle}>
-                💡 Dica: Use seu email institucional
-              </Text>
-            </View>
-          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

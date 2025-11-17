@@ -1,5 +1,5 @@
 // ============================================
-// MENU - SEM LOOP
+// MENU COM SINCRONIZAÇÃO AUTOMÁTICA
 // app/menu.tsx
 // ============================================
 
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import NetInfo from "@react-native-community/netinfo";
 import { useAuth } from "../hooks/useAuth";
 import { getAllPrisoners } from "../services/prisonerService";
 import { getAllConferences } from "../services/conferenceService";
@@ -27,6 +28,8 @@ export default function MenuFirebase() {
   const [totalPrisoners, setTotalPrisoners] = useState(0);
   const [totalConferences, setTotalConferences] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
   // Bloquear botão voltar
   useEffect(() => {
@@ -46,29 +49,64 @@ export default function MenuFirebase() {
     return () => backHandler.remove();
   }, []);
 
-  // Carregar estatísticas
+  // ============================================
+  // MONITORAR CONEXÃO DE REDE
+  // ============================================
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected ?? false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Carregar estatísticas inicialmente
   useEffect(() => {
     if (user) {
       loadStatistics();
     }
   }, [user]);
 
-  const loadStatistics = async () => {
+  // ============================================
+  // SINCRONIZAÇÃO AUTOMÁTICA A CADA 30 SEGUNDOS
+  // ============================================
+  useEffect(() => {
+    if (!user || !isOnline) return;
+
+    // Sincronizar a cada 30 segundos (apenas se estiver online)
+    const syncInterval = setInterval(() => {
+      if (isOnline) {
+        loadStatistics(true); // true = sincronização silenciosa
+      }
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(syncInterval);
+  }, [user, isOnline]);
+
+  const loadStatistics = async (silent = false) => {
     if (!user) return;
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       
       const prisoners = await getAllPrisoners(user.uid);
       setTotalPrisoners(prisoners.length);
       
       const conferences = await getAllConferences(user.uid);
       setTotalConferences(conferences.length);
+      
+      setLastSync(new Date());
     } catch (error: any) {
       console.error("Erro ao carregar estatísticas:", error);
-      Alert.alert("Atenção", "Não foi possível carregar os dados");
+      if (!silent) {
+        Alert.alert("Atenção", "Não foi possível carregar os dados");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -87,6 +125,17 @@ export default function MenuFirebase() {
         }
       },
     ]);
+  };
+
+  const formatLastSync = () => {
+    if (!lastSync) return "Nunca";
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - lastSync.getTime()) / 1000);
+    
+    if (diff < 60) return "Agora mesmo";
+    if (diff < 120) return "1 minuto atrás";
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutos atrás`;
+    return lastSync.toLocaleTimeString("pt-BR");
   };
 
   if (!user) {
@@ -110,6 +159,27 @@ export default function MenuFirebase() {
 
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Sistema Prisional</Text>
+          {/* Indicador Online/Offline */}
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            marginTop: 4,
+            gap: 5,
+          }}>
+            <View style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: isOnline ? '#10b981' : '#ef4444',
+            }} />
+            <Text style={{ 
+              color: isOnline ? '#a7f3d0' : '#fca5a5', 
+              fontSize: 11,
+              fontWeight: '500',
+            }}>
+              {isOnline ? 'Online' : 'Offline'}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.headerRight}>
@@ -136,6 +206,45 @@ export default function MenuFirebase() {
           bounces={true}
           contentContainerStyle={{ paddingBottom: 30 }}
         >
+          {/* Indicador de Sincronização Automática */}
+          <View style={{
+            backgroundColor: isOnline ? '#ecfdf5' : '#fef2f2',
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 15,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderWidth: 1,
+            borderColor: isOnline ? '#10b981' : '#ef4444',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 16 }}>{isOnline ? '🔄' : '📡'}</Text>
+              <View>
+                <Text style={{ fontSize: 12, color: isOnline ? '#065f46' : '#7f1d1d', fontWeight: '600' }}>
+                  {isOnline ? 'Sincronização Automática' : 'Modo Offline'}
+                </Text>
+                <Text style={{ fontSize: 10, color: isOnline ? '#059669' : '#dc2626' }}>
+                  {isOnline ? `Última: ${formatLastSync()}` : 'Sem conexão com internet'}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              onPress={() => loadStatistics()}
+              disabled={!isOnline}
+              style={{
+                backgroundColor: isOnline ? '#10b981' : '#9ca3af',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 6,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                {isOnline ? 'Atualizar' : 'Offline'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity 
             style={styles.menuCard} 
             onPress={() => router.push("/conferencia")}
@@ -168,7 +277,7 @@ export default function MenuFirebase() {
               {totalConferences} conferências realizadas
             </Text>
           </TouchableOpacity>
-                   
+                  
           <View style={styles.totalBox}>
             <Text style={styles.totalText}>
               Total: {totalPrisoners} internos

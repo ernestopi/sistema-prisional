@@ -786,7 +786,7 @@ tabCount: {
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#7b7b7cff",
     alignItems: "center",
   },
   saveBtn2: {

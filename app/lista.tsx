@@ -21,19 +21,19 @@ import { useRouter } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useAuth } from "../hooks/useAuth";
-import { getAllPrisoners, Prisoner } from "../services/prisonerService";
-import { saveConference } from "../services/conferenceService";
+import { listarPresos, listarPresosPorPresidio } from "../services/prisonerService";
+import { salvarConferencia } from "../services/conferenceService";
 import styles from "./styles";
 import { Ionicons } from '@expo/vector-icons';
 
 export default function Lista() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
 
   // ============================================
   // ESTADOS
   // ============================================
-  const [prisoners, setPrisoners] = useState<Prisoner[]>([]);
+  const [prisoners, setPrisoners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados de busca e conferência
@@ -46,18 +46,29 @@ export default function Lista() {
   // CARREGAMENTO INICIAL
   // ============================================
   useEffect(() => {
-    if (user) {
+    if (user && userData) {
       loadData();
     }
-  }, [user]);
+  }, [user, userData]); // ✅ Adicionar userData como dependência
 
   const loadData = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      const allPrisoners = await getAllPrisoners(user.uid);
+      
+      let allPrisoners;
+      
+      // Filtro por presídio: se usuário tem presidioId, filtra apenas seu presídio
+      if (userData?.presidioId) {
+        allPrisoners = await listarPresosPorPresidio(userData.presidioId);
+      } else {
+        // Admin sem presidioId vê todos
+        allPrisoners = await listarPresos();
+      }
+      
       setPrisoners(allPrisoners);
+      
     } catch (error: any) {
       console.error("Erro ao carregar dados:", error);
       Alert.alert("Erro", error.message || "Não foi possível carregar os dados");
@@ -69,23 +80,41 @@ export default function Lista() {
   // ============================================
   // FUNÇÕES AUXILIARES
   // ============================================
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("pt-BR");
-
-  const getLocation = (prisoner: Prisoner): string => {
-    if (prisoner.isHospital) return "Hospital";
-    return `Pav. ${prisoner.pavilion || "?"} - Cela ${prisoner.cellId || "?"}`;
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Data não informada";
+    try {
+      return new Date(dateString).toLocaleDateString("pt-BR");
+    } catch {
+      return dateString; // Retorna a string original se não conseguir formatar
+    }
   };
 
-  const filterPrisoners = (): Prisoner[] => {
+  // ✅ FUNÇÃO CORRIGIDA - compatível com campos em português e inglês
+  const getLocation = (prisoner: any): string => {
+    // Verifica se está hospitalizado
+    if (prisoner.isHospital || prisoner.situacao === "Hospitalizado") {
+      return "Hospital";
+    }
+    
+    // Tenta pegar tanto em inglês quanto português
+    const pav = prisoner.pavilhao || prisoner.pavilion || "?";
+    const cela = prisoner.cela || prisoner.cellId || "?";
+    return `Pav. ${pav} - Cela ${cela}`;
+  };
+
+  const filterPrisoners = (): any[] => {
     if (!searchQuery.trim()) return prisoners;
 
     const q = searchQuery.toLowerCase();
     return prisoners.filter((p) => {
-      if (searchType === "name") return p.name.toLowerCase().includes(q);
-      if (searchType === "matricula")
-        return p.matricula?.toLowerCase().includes(q);
-      if (searchType === "cell") return getLocation(p).toLowerCase().includes(q);
+      // Suporta tanto 'name' quanto 'nome'
+      const name = (p.nome || p.name || "").toLowerCase();
+      const matricula = (p.matricula || "").toLowerCase();
+      const location = getLocation(p).toLowerCase();
+
+      if (searchType === "name") return name.includes(q);
+      if (searchType === "matricula") return matricula.includes(q);
+      if (searchType === "cell") return location.includes(q);
       return false;
     });
   };
@@ -126,17 +155,13 @@ export default function Lista() {
     }
 
     try {
-      await saveConference(
-        {
-          user: user.email || "Usuário",
-          userName: user.displayName || user.email || "Usuário",
-          totalPrisoners: total,
-          checkedCount: checked,
-          missingCount: total - checked,
-          checkedIds: conferenciaChecked,
-        },
-        user.uid
-      );
+      await salvarConferencia({
+        observacao: `Conferência realizada por ${user.displayName || user.email}`,
+        presidioId: "default", // ou pegar do userData se disponível
+        totalConferidos: checked,
+        totalPresos: total,
+        usuarioId: user.uid,
+      });
 
       Alert.alert(
         "Salvo!",
@@ -179,21 +204,25 @@ export default function Lista() {
 
       {/* CABEÇALHO */}
       <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.circleBackButton} onPress={() => router.push("/menu")}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.circleBackButton} onPress={() => router.push("/menu")}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        
-        <View>
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Lista</Text>
           <Text style={styles.headerSub}>Total: {prisoners.length}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={() => router.replace("/login")}
-        >
-          <Text style={styles.logoutText}>Sair</Text>
-        </TouchableOpacity>
+
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={() => router.replace("/login")}
+          >
+            <Text style={styles.logoutText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ÁREA DE BUSCA E CONTROLES */}
@@ -235,7 +264,9 @@ export default function Lista() {
           <TouchableOpacity
             style={[styles.confBtn, conferenciaMode && { backgroundColor: "#ef4444" }]}
             onPress={toggleConferenciaMode}>
-              <Text style={styles.confBtnText}>{conferenciaMode ? "❌ Cancelar" : "✅ Iniciar Conferência"}</Text>
+              <Text style={styles.confBtnText}>
+                {conferenciaMode ? "❌ Cancelar" : "✅ Iniciar Conferência"}
+              </Text>
           </TouchableOpacity>
           {conferenciaMode && (
             <TouchableOpacity style={styles.saveBtn} onPress={saveConferencia}>
@@ -245,8 +276,6 @@ export default function Lista() {
             </TouchableOpacity>
           )}
         </View>
-
-     
       </View>
 
       {/* CONTEÚDO - LISTA DE PRESOS */}
@@ -302,9 +331,12 @@ export default function Lista() {
                 </View>
               )}
 
-              {/* Foto do preso */}
-              {p.photo ? (
-                <Image source={{ uri: p.photo }} style={styles.photo} />
+              {/* FOTO CORRIGIDA - suporta 'foto' e 'photo' */}
+              {(p.foto || p.photo) ? (
+                <Image 
+                  source={{ uri: p.foto || p.photo }} 
+                  style={styles.photo} 
+                />
               ) : (
                 <View style={styles.photoPlaceholder}>
                   <Text>?</Text>
@@ -313,37 +345,55 @@ export default function Lista() {
 
               {/* Informações do preso */}
               <View style={styles.prisonerInfo}>
-                <Text style={styles.prisonerName}>{p.name}</Text>
-                <Text style={styles.prisonerDetail}>Mat: {p.matricula}</Text>
+                {/* NOME CORRIGIDO - suporta 'nome' e 'name' */}
+                <Text style={styles.prisonerName}>
+                  {p.nome || p.name || "Sem nome"}
+                </Text>
+                
+                <Text style={styles.prisonerDetail}>
+                  Mat: {p.matricula || "N/A"}
+                </Text>
+                
                 <Text style={styles.location}>{getLocation(p)}</Text>
-                {!p.isHospital && (
-                  <>
-                    <Text style={styles.prisonerDetail}>
-                      Entrada: {formatDate(p.entryDate)}
-                    </Text>
-                    <View style={styles.badges}>
-                      {p.hasTV && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>📺</Text>
-                        </View>
-                      )}
-                      {p.hasRadio && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>📻</Text>
-                        </View>
-                      )}
-                      {p.hasFan && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>🌀</Text>
-                        </View>
-                      )}
-                      {p.hasMattress && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>🛏️</Text>
-                        </View>
-                      )}
-                    </View>
-                  </>
+                
+                {/* DATA CORRIGIDA - só mostra se não for hospital */}
+                {!(p.isHospital || p.situacao === "Hospitalizado") && p.entryDate && (
+                  <Text style={styles.prisonerDetail}>
+                    Entrada: {formatDate(p.entryDate)}
+                  </Text>
+                )}
+
+                {/* DIA DE VISITA */}
+                {p.diaVisita && (
+                  <Text style={[styles.prisonerDetail, { color: "#3b82f6", fontWeight: "600" }]}>
+                    📅 Visita: {p.diaVisita}
+                  </Text>
+                )}
+                
+                {/* BADGES CORRIGIDOS - suporta campos em português e inglês */}
+                {!(p.isHospital || p.situacao === "Hospitalizado") && (
+                  <View style={styles.badges}>
+                    {(p.tv || p.hasTV) && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>📺</Text>
+                      </View>
+                    )}
+                    {(p.radio || p.hasRadio) && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>📻</Text>
+                      </View>
+                    )}
+                    {(p.ventilador || p.hasFan) && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>🌀</Text>
+                      </View>
+                    )}
+                    {(p.colchao || p.hasMattress) && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>🛏️</Text>
+                      </View>
+                    )}
+                  </View>
                 )}
               </View>
             </TouchableOpacity>
